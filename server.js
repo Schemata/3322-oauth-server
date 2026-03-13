@@ -63,18 +63,24 @@ app.get('/oauth/callback', async (req, res) => {
         <title>Authorization Successful</title>
       </head>
       <body>
-        <h1>Authorization successful!</h1>
-        <p>You can close this window.</p>
-        <script>
-          // Send token to parent window (CMS)
+      <script>
+      (function() {
+        function send() {
           if (window.opener) {
             window.opener.postMessage(
               'authorization:github:success:{"token":"${access_token}","provider":"github"}',
               '${SITE_URL}'
             );
             window.close();
+          } else {
+            document.body.innerText = "Login succeeded. You can close this window.";
           }
-        </script>
+        }
+      
+        // Wait a moment to ensure the CMS window is ready
+        setTimeout(send, 100);
+      })();
+      </script>
       </body>
       </html>
     `);
