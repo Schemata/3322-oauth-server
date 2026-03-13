@@ -60,42 +60,19 @@ app.get('/oauth/callback', async (req, res) => {
     res.send(`
       <!DOCTYPE html>
       <html>
-      <head>
-      <title>OAuth Debug</title>
-      </head>
       <body>
-      <h1>OAuth Debug</h1>
-      
       <script>
-      console.log("OAuth callback script running");
       
       const token = "${access_token}";
-      const origin = "${SITE_URL}";
+      const site = "${SITE_URL}";
       
-      console.log("Token:", token);
-      console.log("Origin:", origin);
-      console.log("Opener:", window.opener);
-      
-      if (window.opener) {
-        console.log("Sending message to opener");
-        window.opener.postMessage(
-          {
-            type: "authorization:github:success",
-            token: token,
-            provider: "github"
-          },
-          origin
-        );
-        console.log("Message sent");
-      } else {
-        console.log("No opener window found");
-      }
-      
-      // comment this out while debugging
-      // window.close();
+      window.location.href =
+        site +
+        "/admin/index.html#access_token=" +
+        token +
+        "&provider=github&token_type=bearer";
       
       </script>
-      
       </body>
       </html>
     `);
