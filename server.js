@@ -62,23 +62,15 @@ app.get('/oauth/callback', async (req, res) => {
       <html>
       <body>
       <script>
-      (function() {
       
-        function receiveMessage(e) {
-          console.log("CMS acknowledged auth");
-          window.close();
-        }
+      const token = "${access_token}";
+      const site = "${SITE_URL}";
       
-        if (window.opener) {
-          window.opener.postMessage(
-            'authorization:github:success:{"token":"${access_token}","provider":"github"}',
-            '*'
-          );
-        }
+      window.location.replace(
+        site + "/admin/oauth.html#access_token=" + token +
+        "&provider=github&token_type=bearer"
+      );
       
-        window.close();
-      
-      })();
       </script>
       </body>
       </html>
