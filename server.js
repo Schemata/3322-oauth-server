@@ -21,7 +21,7 @@ app.get("/oauth/github", (_, res) => {
 });
 
 // Step 2: GitHub callback
-app.get("/callback", async (req, res) => {
+app.get("/oauth/callback", async (req, res) => {
   const { code } = req.query;
   if (!code) return res.status(400).send("No code provided");
 
