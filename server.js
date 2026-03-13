@@ -79,7 +79,11 @@ app.get('/oauth/callback', async (req, res) => {
       if (window.opener) {
         console.log("Sending message to opener");
         window.opener.postMessage(
-          'authorization:github:success:{"token":"' + token + '","provider":"github"}',
+          {
+            type: "authorization:github:success",
+            token: token,
+            provider: "github"
+          },
           origin
         );
         console.log("Message sent");
