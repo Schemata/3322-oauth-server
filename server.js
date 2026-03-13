@@ -1,111 +1,56 @@
-const express = require('express');
-const axios = require('axios');
-const cors = require('cors');
+// server.js
+const express = require("express");
+const axios = require("axios");
 
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
 // Environment variables
 const CLIENT_ID = process.env.GITHUB_CLIENT_ID;
 const CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
-const REDIRECT_URI = process.env.GITHUB_REDIRECT_URI;
-const SITE_URL = process.env.SITE_URL;
+const REDIRECT_URI = process.env.GITHUB_REDIRECT_URI; // e.g., https://your-oauth-server.vercel.app/callback
+const SITE_URL = process.env.SITE_URL; // e.g., https://your-site.vercel.app
 
-// Enable CORS for all origins
-app.use(cors());
-app.use(express.json());
+// Health check
+app.get("/", (_, res) => res.send("Decap CMS OAuth server running"));
 
-// Health check endpoint
-app.get('/', (req, res) => {
-  res.json({
-    status: 'OK',
-    message: 'Decap CMS OAuth Server',
-    endpoints: ['/oauth/github', '/oauth/callback']
-  });
+// Step 1: start OAuth
+app.get("/oauth/github", (_, res) => {
+  const url = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=repo&state=default`;
+  res.redirect(url);
 });
 
-// GitHub OAuth initiation
-app.get('/oauth/github', (req, res) => {
-  const authURL = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=repo&state=${req.query.state || 'default'}`;
-  res.redirect(authURL);
-});
-
-// GitHub OAuth callback
-app.get('/oauth/callback', async (req, res) => {
-  const { code, state } = req.query;
-
-  if (!code) {
-    return res.status(400).send('Authorization code not found');
-  }
+// Step 2: GitHub callback
+app.get("/callback", async (req, res) => {
+  const { code } = req.query;
+  if (!code) return res.status(400).send("No code provided");
 
   try {
     // Exchange code for access token
-    const tokenResponse = await axios.post('https://github.com/login/oauth/access_token', {
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
-      code: code,
-      redirect_uri: REDIRECT_URI
-    }, {
-      headers: { Accept: 'application/json' }
-    });
+    const tokenResp = await axios.post(
+      "https://github.com/login/oauth/access_token",
+      { client_id: CLIENT_ID, client_secret: CLIENT_SECRET, code, redirect_uri: REDIRECT_URI },
+      { headers: { Accept: "application/json" } }
+    );
 
-    const { access_token } = tokenResponse.data;
+    const token = tokenResp.data.access_token;
+    if (!token) throw new Error("No access token received");
 
-    if (!access_token) {
-      throw new Error('No access token received');
-    }
-
-    // Return success page that will close the popup
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    // Redirect to CMS site to deliver token from same origin
     res.send(`
       <!DOCTYPE html>
       <html>
       <body>
       <script>
-      
-      const token = "${access_token}";
-      const site = "${SITE_URL}";
-      
-      window.location =
-        site +
-        "/admin/oauth.html?access_token=" +
-        token;
-      
+        window.location = "${SITE_URL}/admin/oauth.html?access_token=${token}";
       </script>
       </body>
       </html>
     `);
-  } catch (error) {
-    console.error('OAuth error:', error);
-    res.status(500).send(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Authorization Failed</title>
-      </head>
-      <body>
-        <h1>Authorization failed</h1>
-        <p>Error: ${error.message}</p>
-        <script>
-          if (window.opener) {
-            window.opener.postMessage(
-              'authorization:github:error:{"error":"${error.message}"}',
-              '${SITE_URL}'
-            );
-            window.close();
-          }
-        </script>
-      </body>
-      </html>
-    `);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("OAuth error");
   }
 });
 
-app.listen(port, () => {
-  console.log(`OAuth server running on port ${port}`);
-  console.log('Environment check:');
-  console.log('- CLIENT_ID:', CLIENT_ID ? 'Set' : 'Missing');
-  console.log('- CLIENT_SECRET:', CLIENT_SECRET ? 'Set' : 'Missing');
-  console.log('- REDIRECT_URI:', REDIRECT_URI);
-  console.log('- SITE_URL:', SITE_URL);
-});
+app.listen(PORT, () => console.log(`OAuth server running on port ${PORT}`));
