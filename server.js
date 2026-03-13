@@ -60,27 +60,34 @@ app.get('/oauth/callback', async (req, res) => {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Authorization Successful</title>
+      <title>OAuth Debug</title>
       </head>
       <body>
+      <h1>OAuth Debug</h1>
       <script>
-      (function() {
-        function send() {
-          if (window.opener) {
-            window.opener.postMessage(
-              'authorization:github:success:{"token":"${access_token}","provider":"github"}',
-              '${SITE_URL}'
-            );
-            window.close();
-          } else {
-            document.body.innerText = "Login succeeded. You can close this window.";
-          }
-        }
+      console.log("OAuth callback loaded");
       
-        // Wait a moment to ensure the CMS window is ready
-        setTimeout(send, 100);
-      })();
+      const token = "${access_token}";
+      const origin = "${SITE_URL}";
+      
+      console.log("Token:", token);
+      console.log("Origin:", origin);
+      console.log("Window opener:", window.opener);
+      
+      if (window.opener) {
+        console.log("Sending message to opener...");
+        window.opener.postMessage(
+          'authorization:github:success:{"token":"' + token + '","provider":"github"}',
+          origin
+        );
+        console.log("Message sent");
+      } else {
+        console.log("No opener window detected");
+      }
+      
+      // window.close();   // COMMENT OUT for debugging
       </script>
+      <p>Check the popup console.</p>
       </body>
       </html>
     `);
