@@ -56,6 +56,7 @@ app.get('/oauth/callback', async (req, res) => {
     }
 
     // Return success page that will close the popup
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.send(`
       <!DOCTYPE html>
       <html>
@@ -64,30 +65,33 @@ app.get('/oauth/callback', async (req, res) => {
       </head>
       <body>
       <h1>OAuth Debug</h1>
+      
       <script>
-      console.log("OAuth callback loaded");
+      console.log("OAuth callback script running");
       
       const token = "${access_token}";
       const origin = "${SITE_URL}";
       
       console.log("Token:", token);
       console.log("Origin:", origin);
-      console.log("Window opener:", window.opener);
+      console.log("Opener:", window.opener);
       
       if (window.opener) {
-        console.log("Sending message to opener...");
+        console.log("Sending message to opener");
         window.opener.postMessage(
           'authorization:github:success:{"token":"' + token + '","provider":"github"}',
           origin
         );
         console.log("Message sent");
       } else {
-        console.log("No opener window detected");
+        console.log("No opener window found");
       }
       
-      // window.close();   // COMMENT OUT for debugging
+      // comment this out while debugging
+      // window.close();
+      
       </script>
-      <p>Check the popup console.</p>
+      
       </body>
       </html>
     `);
