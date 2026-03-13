@@ -68,8 +68,9 @@ app.get('/oauth/callback', async (req, res) => {
       
       window.location =
         site +
-        "/admin/oauth.html?access_token=" +
-        token;
+        "/admin/index.html#access_token=" +
+        token +
+        "&provider=github&token_type=bearer";
       
       </script>
       </body>
