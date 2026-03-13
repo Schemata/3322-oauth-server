@@ -64,12 +64,15 @@ app.get('/oauth/callback', async (req, res) => {
       <script>
       
       const token = "${access_token}";
-      const site = "${SITE_URL}";
       
-      window.location.replace(
-        site + "/admin/oauth.html#access_token=" + token +
-        "&provider=github&token_type=bearer"
-      );
+      if (window.opener) {
+        window.opener.postMessage(
+          'authorization:github:success:{"token":"' + token + '"}',
+          "*"
+        );
+      }
+      
+      window.close();
       
       </script>
       </body>
