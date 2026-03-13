@@ -68,7 +68,7 @@ app.get('/oauth/callback', async (req, res) => {
       
       window.location =
         site +
-        "/admin/oauth.html#access_token=" +
+        "/admin/oauth.html?access_token=" +
         token;
       
       </script>
